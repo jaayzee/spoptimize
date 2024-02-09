@@ -16,7 +16,7 @@ const getSearchedItems = (search: string, playlists: JSX.Element[]) => {
 }
 
 const PlaylistPicker = () => {
-    // Handle Playlists
+// Handle Playlists
     const [token, setToken] = useState<string | null>("")
     const [data, setData] = useState<any>({})
 
@@ -40,7 +40,7 @@ const PlaylistPicker = () => {
         })
     },[token])
     
-    //pass into query
+//Pass into query
     const [search, setSearch] = useState<string>("")
     const allPlaylists = data?.items ? data.items.map((item:any) => (
         <div key={item.name} onClick={() => handleGetTracks(item.href + '/tracks')} id={item.name}>
@@ -48,7 +48,7 @@ const PlaylistPicker = () => {
         </div>)) : null
     const searchResults = getSearchedItems(search, allPlaylists)
 
-    // Get Playlist Tracks
+// Get Playlist Tracks
     const[songs, setSongs] = useState<any>([])
     const handleGetTracks = (playlistLink: string) => {
         axios.get(playlistLink, {
@@ -81,7 +81,6 @@ const PlaylistPicker = () => {
         <div className="flex-grow-1 my-2" style = {{ overflowY: "auto" }}>
             Playlists
         </div>
-        {/* <button onClick={handleGetPlaylist}> Get Playlists </button> */}
         <ul>
             {searchResults}
         </ul>
