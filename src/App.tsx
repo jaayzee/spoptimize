@@ -10,13 +10,11 @@ const LoginState:boolean = window.location.hash? true : false
 
 function App() {
   return (
-    LoginState ? 
     <Container>
-      <PlaylistPicker />
-    </Container>
-    :
-    <Container>
+      <Container>
       <Login />
+    </Container>
+      <PlaylistPicker />
     </Container>
   );
 }

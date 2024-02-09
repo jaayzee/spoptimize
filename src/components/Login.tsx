@@ -1,8 +1,8 @@
 import React, { useEffect }from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Button } from 'react-bootstrap'
+import { access } from 'fs'
 
-// const CLIENT_SECRET: string = "7e2471b9ce414c059de6924743b544b5"
 const CLIENT_ID: string = "b1da2f24d03c4e43b63c463dc233f5c9"
 const SPOTIFY_BASE_URL: string = "https://accounts.spotify.com/authorize"
 const REDIRECT_URI: string = "http://localhost:3000"
@@ -21,6 +21,8 @@ const getReturnedParamsFromSpotifyAuth: any = (hash:string) => {
   return paramSplit
 }
 
+var LoggedIn: boolean = false;
+
 const Login: React.FC = () => {
 
   useEffect(() => {
@@ -36,6 +38,8 @@ const Login: React.FC = () => {
       localStorage.setItem("accessToken", access_token)
       localStorage.setItem("tokenType", token_type)
       localStorage.setItem("expiresIn", expires_in)
+
+      LoggedIn = true;
     }
   })
 
