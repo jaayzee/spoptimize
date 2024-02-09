@@ -19,6 +19,7 @@ const PlaylistPicker = () => {
 // Handle Playlists
     const [token, setToken] = useState<string | null>("")
     const [data, setData] = useState<any>({})
+    const [playlistName, setPlaylistName] = useState<string>("")
 
     useEffect(() => {
         if (localStorage.getItem('accessToken')) {
@@ -43,26 +44,28 @@ const PlaylistPicker = () => {
 //Pass into query
     const [search, setSearch] = useState<string>("")
     const allPlaylists = data?.items ? data.items.map((item:any) => (
-        <div key={item.name} onClick={() => handleGetTracks(item.href + '/tracks')} id={item.name}>
+        <div key={item.name} onClick={() => handleGetTracks(item.name, item.href + '/tracks')} id={item.name}>
             {item.name}
         </div>)) : null
     const searchResults = getSearchedItems(search, allPlaylists)
 
 // Get Playlist Tracks
     const[songs, setSongs] = useState<any>([])
-    const handleGetTracks = (playlistLink: string) => {
+    const handleGetTracks = (playlistName: string, playlistLink: string) => {
         axios.get(playlistLink, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         })
         .then(response => {
+            console.log(response.data)
             setSongs(response.data)
 
         })
         .catch((error: Error) => {
             console.log(error)
         })
+        setPlaylistName(playlistName != null ? playlistName : "")
     }
 
     const allSongs:JSX.Element[] = songs?.items ? songs.items.map((item:any) => (
@@ -85,7 +88,7 @@ const PlaylistPicker = () => {
             {searchResults}
         </ul>
         <div className="flex-grow-1 my-2" style = {{ overflowY: "auto" }}>
-            Songs in Playlist
+            Songs in: {playlistName}
         </div>
         <ul>
             {allSongs}
