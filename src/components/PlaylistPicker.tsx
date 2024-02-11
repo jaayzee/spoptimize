@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react"
-import { Container, Form } from "react-bootstrap"
+import React, { useEffect, useState, Children } from "react"
+import { Container, Button, Form } from "react-bootstrap"
 import axios from "axios"
+import Analyzer from "./Analyzer"
 
-const PLAYLIST_ENDPOINT: string = "https://api.spotify.com/v1/me/playlists"
+const MY_PLAYLISTS_ENDPOINT: string = "https://api.spotify.com/v1/me/playlists/"
+const PLAYLIST_ENDPOINT: string = "https://api.spotify.com/v1/playlists/"
 
-//Query function
+//Query function, search through playlists, or display playlists
 const getSearchedItems = (search: string, playlists: JSX.Element[]) => {
     if (!search) {
         return playlists
@@ -21,14 +23,16 @@ const PlaylistPicker = () => {
     const [data, setData] = useState<any>({})
     const [playlistName, setPlaylistName] = useState<string>("")
 
+    // Search for accessToken whenever locally stored accessToken is changed
     useEffect(() => {
         if (localStorage.getItem('accessToken')) {
             setToken(localStorage.getItem('accessToken'))
         }
     }, [localStorage.getItem('accessToken')])
 
+    // Whenever accessToken is changed, grab user playlists
     useEffect(() => {
-        axios.get(PLAYLIST_ENDPOINT, {
+        axios.get(MY_PLAYLISTS_ENDPOINT, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -40,39 +44,111 @@ const PlaylistPicker = () => {
             console.log(error)
         })
     },[token])
-    
-//Pass into query
-    const [search, setSearch] = useState<string>("")
-    const allPlaylists = data?.items ? data.items.map((item:any) => (
-        <div key={item.name} onClick={() => handleGetTracks(item.name, item.href + '/tracks')} id={item.name}>
-            {item.name}
-        </div>)) : null
-    const searchResults = getSearchedItems(search, allPlaylists)
 
-// Get Playlist Tracks
-    const[songs, setSongs] = useState<any>([])
-    const handleGetTracks = (playlistName: string, playlistLink: string) => {
-        axios.get(playlistLink, {
+    
+    
+//Pass playlists, pass into query
+    const [search, setSearch] = useState<string>("")
+    const [songs, setSongs] = useState<any>([])
+    const [allSongs, setAllSongs] = useState<JSX.Element[]>([])
+    const [allSongIDs, setAllSongsIDs] = useState<string[]>([])
+
+    // Playlist was clicked, grabbing tracks
+    const handleGetTracks = (playlistName:string, playlistID: string) => {
+        axios.get(PLAYLIST_ENDPOINT + playlistID + '/tracks?limit=100', {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         })
         .then(response => {
-            console.log(response.data)
             setSongs(response.data)
 
         })
         .catch((error: Error) => {
             console.log(error)
         })
-        setPlaylistName(playlistName != null ? playlistName : "")
+        setPlaylistName(playlistName)
     }
 
-    const allSongs:JSX.Element[] = songs?.items ? songs.items.map((item:any) => (
-    <div key={item.track.id}>
-        {item.track.name}
-    </div>)) : null
+    // Since songs were updated, spit out all songs as a div
+    useEffect(() => {
+        const repeats = new Set()
+        const allIDs:string[] = []
+        setAllSongs(songs?.items ? songs.items.map((item:any) => {
+            if (item.track != null && !repeats.has(item.track.id)){
+                repeats.add(item.track.id)
+                allIDs.push(item.track.id)
+                return (
+                <div key={item.track.id}>
+                    {item.track.name}
+                </div>
+                )
+            } else { return (null)
+            }}): null
+        )
+        setAllSongsIDs(allIDs)
+    }, [songs])
+
+
+
+//Run search function during render, so it loads for the user, calls on getSearchedItems for playlists data
+    var searchResults:JSX.Element[] = []
+    const allPlaylists = data?.items ? data.items.map((item:any) => (
+        <div key={item.name} onClick={() => handleGetTracks(item.name, item.id)}>
+            {item.name}
+        </div>)) : null
+        searchResults = getSearchedItems(search, allPlaylists)
+
+
+
+//Call to Optimizer
+    interface Prop {
+        [key: string]: JSX.Element[]
+    }
+    const AUDIO_ANALYSIS_ENDPOINT: string = "https://api.spotify.com/v1/audio-analysis/"
+    const [dataIDPair, setDataIDPair] = useState<Prop[]>([])
+    const [songRequest, setSongRequest] = useState<string[]>([])
+    const [songData, setSongData] = useState<JSX.Element[][]>([])
+    const handleSongData = (key: string) => {
+        return axios.get(AUDIO_ANALYSIS_ENDPOINT + key, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        .then(response =>  response.data)
+        .catch((error: Error) => {
+            console.log(error)
+            return null
+        })
+    }
+
+    // Button press optimize current playlist songs for analysis
+    const handleOptimization = () => {
+        setSongRequest(Children.toArray(allSongs).map((songs:any) => {
+            return songs.key.substring(2)
+        }))
+    }
+
+    // After songRequest is updated, call handleSongData
+    useEffect(() => {
+        const promises = songRequest.map(item => handleSongData(item))
+        Promise.all(promises)
+        .then(results => {
+            setSongData(results)
+        }).catch((error: Error) => {
+            console.log(error)
+        })
+    },[songRequest])
+
+    // After songData is updated, call setDataIDPair to send data to Optimizer
+    useEffect(() => {
+        setDataIDPair(allSongIDs.map((id:string, index: number) => ({
+            [id]: songData[index]
+            })))
+    },[songData])
     
+
+
     return (
     <>
     <Container>
@@ -88,10 +164,14 @@ const PlaylistPicker = () => {
             {searchResults}
         </ul>
         <div className="flex-grow-1 my-2" style = {{ overflowY: "auto" }}>
-            Songs in: {playlistName}
+            Songs in: {playlistName} (Limit 100)
         </div>
         <ul>
             {allSongs}
+        </ul>
+        <Button onClick={handleOptimization}>Optimize</Button>
+        <ul>
+            <Analyzer inputData = {dataIDPair} />
         </ul>
     </Container>
     </>
