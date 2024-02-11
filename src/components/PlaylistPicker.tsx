@@ -1,7 +1,7 @@
 import React, { useEffect, useState, Children } from "react"
 import { Container, Button, Form } from "react-bootstrap"
 import axios from "axios"
-import Analyzer from "./Analyzer"
+import Optimizer from "./Optimizer"
 
 const MY_PLAYLISTS_ENDPOINT: string = "https://api.spotify.com/v1/me/playlists/"
 const PLAYLIST_ENDPOINT: string = "https://api.spotify.com/v1/playlists/"
@@ -171,7 +171,7 @@ const PlaylistPicker = () => {
         </ul>
         <Button onClick={handleOptimization}>Optimize</Button>
         <ul>
-            <Analyzer inputData = {dataIDPair} />
+            <Optimizer inputData = {dataIDPair} />
         </ul>
     </Container>
     </>
