@@ -108,17 +108,21 @@ const PlaylistPicker = () => {
     const AUDIO_ANALYSIS_ENDPOINT: string = "https://api.spotify.com/v1/audio-analysis/"
     const [dataIDPair, setDataIDPair] = useState<Prop[]>([])
     const [songRequest, setSongRequest] = useState<string[]>([])
-    const [songData, setSongData] = useState<JSX.Element[][]>([])
+    const [songData, setSongData] = useState<any>([])
     const handleSongData = (key: string) => {
         return axios.get(AUDIO_ANALYSIS_ENDPOINT + key, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         })
-        // This grabs the audio analysis' last segment, from which it has a confidence array of keys ranging from
+        // This grabs the audio analysis' first and last couple segments, from which it has a confidence array of keys ranging from
         // [C, C#, D, D#, E, F, F#, G, G#, A, A# and B] respectively
         // confidence goes from 0 - 1, with 1 being full confidence
-        .then(response =>  response.data.segments[response.data.segments.length - 1].pitches)
+        .then(response =>  {
+            const first = response.data.segments.slice(0,3).map((selection:any) => selection.pitches)
+            const last = response.data.segments.slice(-3).map((selection:any) => selection.pitches)
+            return  [first, last] 
+        })
         .catch((error: Error) => {
             console.log(error)
             return null
