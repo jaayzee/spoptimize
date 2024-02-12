@@ -115,7 +115,10 @@ const PlaylistPicker = () => {
                 Authorization: `Bearer ${token}`
             }
         })
-        .then(response =>  response.data)
+        // This grabs the audio analysis' last segment, from which it has a confidence array of keys ranging from
+        // [C, C#, D, D#, E, F, F#, G, G#, A, A# and B] respectively
+        // confidence goes from 0 - 1, with 1 being full confidence
+        .then(response =>  response.data.segments[response.data.segments.length - 1].pitches)
         .catch((error: Error) => {
             console.log(error)
             return null
