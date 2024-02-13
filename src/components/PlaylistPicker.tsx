@@ -121,7 +121,7 @@ const PlaylistPicker = () => {
         .then(response =>  {
             const first = response.data.segments.slice(0,3).map((selection:any) => selection.pitches)
             const last = response.data.segments.slice(-3).map((selection:any) => selection.pitches)
-            return  [first, last] 
+            return  {start: first, end: last} 
         })
         .catch((error: Error) => {
             console.log(error)
