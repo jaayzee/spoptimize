@@ -119,8 +119,8 @@ const PlaylistPicker = () => {
         // [C, C#, D, D#, E, F, F#, G, G#, A, A# and B] respectively
         // confidence goes from 0 - 1, with 1 being full confidence
         .then(response =>  {
-            const first = response.data.segments.slice(0,3).map((selection:any) => selection.pitches)
-            const last = response.data.segments.slice(-3).map((selection:any) => selection.pitches)
+            const first = response.data.segments.slice(0,1).map((selection:any) => selection.pitches)
+            const last = response.data.segments.slice(-1).map((selection:any) => selection.pitches)
             return  {start: first, end: last} 
         })
         .catch((error: Error) => {
